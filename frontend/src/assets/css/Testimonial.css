@@ -1,0 +1,28 @@
+.testimonial-section {
+  background-color: var(--background-light);
+  padding: 6rem 0;
+  text-align: center;
+}
+
+.testimonial-content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.testimonial-text {
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  color: var(--text);
+}
+
+.testimonial-author {
+  font-size: 1.125rem;
+  color: var(--text-dark);
+}
+
+.testimonial-author span {
+  font-weight: 700;
+  color: var(--text);
+}

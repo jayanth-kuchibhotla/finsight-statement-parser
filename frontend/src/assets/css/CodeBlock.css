@@ -1,0 +1,39 @@
+.code-block-section h2, .code-block-section p {
+  text-align: center;
+}
+
+.code-block-section p {
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.code-block {
+  background-color: #1e1e1e;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.code-block pre {
+  margin: 0;
+}
+
+.code-block code {
+  font-family: 'Fira Code', monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #d4d4d4;
+}
+
+.code-block .comment {
+  color: #6a9955;
+}
+
+.code-block .keyword {
+  color: #569cd6;
+}
+
+.code-block .function {
+  color: #dcdcaa;
+}

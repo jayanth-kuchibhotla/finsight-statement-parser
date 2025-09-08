@@ -1,0 +1,18 @@
+.hero-section {
+  text-align: center;
+  padding: 8rem 0;
+  background: radial-gradient(ellipse at top, var(--background-light), var(--background));
+}
+
+.hero-content h1 {
+  font-size: 4.5rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+
+.hero-content p {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  font-size: 1.25rem;
+}
