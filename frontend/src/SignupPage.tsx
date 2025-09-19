@@ -1,32 +1,87 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { signUp, confirmSignUp, signIn } from '@aws-amplify/auth';
 import './assets/css/SignupPage.css';
 
-const SignupPage: React.FC = () => {
+interface SignupPageProps {
+  setIsAuthenticated: (isAuthenticated: boolean) => void;
+}
+
+const SignupPage: React.FC<SignupPageProps> = ({ setIsAuthenticated }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmationCode, setConfirmationCode] = useState('');
   const [error, setError] = useState('');
+  const [newUser, setNewUser] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-    } else {
-      setError('');
-      // Proceed with signup logic
-      console.log('Passwords match');
+      return;
+    }
+
+    try {
+      const { nextStep } = await signUp({
+        username: email,
+        password,
+      });
+      setNewUser(nextStep.signUpStep);
+    } catch (error: any) {
+      setError(error.message);
     }
   };
 
-  return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2 className="auth-title">Create an Account</h2>
-        <p className="auth-subtitle">Start your journey with us today</p>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+  const handleConfirmationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await confirmSignUp({ username: email, confirmationCode });
+      await signIn({ username: email, password });
+      setIsAuthenticated(true);
+      navigate('/upload');
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const renderConfirmationForm = () => {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <h2 className="auth-title">Confirm Your Email</h2>
+          <p className="auth-subtitle">We've sent a confirmation code to your email.</p>
+          <form onSubmit={handleConfirmationSubmit}>
+            <div className="form-group">
+              <label htmlFor="confirmationCode">Confirmation Code</label>
+              <input
+                type="text"
+                id="confirmationCode"
+                name="confirmationCode"
+                required
+                className="form-control"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+              />
+            </div>
+            {error && <p className="error-message">{error}</p>}
+            <button type="submit" className="btn btn-primary btn-gradient">Confirm</button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSignupForm = () => {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <h2 className="auth-title">Create an Account</h2>
+          <p className="auth-subtitle">Start your journey with us today</p>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
@@ -63,11 +118,18 @@ const SignupPage: React.FC = () => {
           </div>
           {error && <p className="error-message">{error}</p>}
           <button type="submit" className="btn btn-primary btn-gradient">Sign Up</button>
-        </form>
-        <p className="auth-switch">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
+          </form>
+          <p className="auth-switch">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </div>
       </div>
+    );
+  };
+
+  return (
+    <div>
+      {newUser === null ? renderSignupForm() : renderConfirmationForm()}
     </div>
   );
 };

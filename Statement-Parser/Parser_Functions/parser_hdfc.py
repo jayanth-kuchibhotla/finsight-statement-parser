@@ -52,6 +52,7 @@ def parser_hdfc_fun(filepath):
         for page in pdf.pages:
             lines = page.extract_text().split('\n')
             for line in lines:
+                line = line.strip()
                 # Identify transaction rows based on date format dd/mm/yy
                 if re.match(r'^\d{2}/\d{2}/\d{2}', line):
                     parts = line.split()
@@ -60,23 +61,48 @@ def parser_hdfc_fun(filepath):
                     txn_date = datetime.strptime(parts[0], "%d/%m/%y").strftime("%Y-%m-%d")
                     
                     # Description
-                    # It can span multiple words, capture until we see the reference number which is usually a long number.
-                    desc_parts = []
-                    i = 1
-                    while i < len(parts) and not parts[i].isdigit() and len(parts[i]) < 8:
-                        desc_parts.append(parts[i])
-                        i += 1
-                    description = " ".join(desc_parts)
+                    # The description is everything between the date and the reference number.
+                    # The reference number is the first long number after the date.
+                    # The value date is the date after the reference number.
+                    # The withdrawal, deposit, and balance are the last three columns.
                     
-                    # Skip the reference number and value date
-                    # Find the start of withdrawal amount
-                    while i < len(parts) and not re.match(r'[\d,]+\.\d{2}', parts[i]):
-                        i += 1
-
-                    # Withdrawal, Deposit, Balance
-                    withdrawal = parts[i]
-                    deposit = parts[i+1]
-                    balance = parts[i+2]
+                    # Find the index of the reference number
+                    ref_no_index = -1
+                    for i in range(1, len(parts)):
+                        if parts[i].isdigit() and len(parts[i]) > 5:
+                            ref_no_index = i
+                            break
+                    
+                    description = " ".join(parts[1:ref_no_index])
+                    
+                    ref_no_index = -1
+                    for i in range(1, len(parts)):
+                        if parts[i].isdigit() and len(parts[i]) > 5:
+                            ref_no_index = i
+                            break
+                    
+                    description = " ".join(parts[1:ref_no_index])
+                    
+                    balance = parts[-1]
+                    deposit = parts[-2]
+                    withdrawal = parts[-3]
+                    
+                    value_date_index = -1
+                    for i in range(1, len(parts)):
+                        try:
+                            datetime.strptime(parts[i], "%d/%m/%y")
+                            value_date_index = i
+                            break
+                        except ValueError:
+                            continue
+                    
+                    ref_no_index = value_date_index - 1
+                    description = " ".join(parts[1:ref_no_index])
+                    
+                    # Withdrawal, Deposit, Balance are the last three columns
+                    balance = parts[-1]
+                    deposit = parts[-2]
+                    withdrawal = parts[-3]
 
                     if withdrawal != '0.00':
                         amount = -float(withdrawal.replace(',', ''))

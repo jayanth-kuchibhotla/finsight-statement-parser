@@ -52,6 +52,7 @@ def parser_kotak_fun(filepath):
         for page in pdf.pages:
             lines = page.extract_text().split('\n')
             for line in lines:
+                line = line.strip()
                 # Identify transaction rows based on date format dd-mm-yyyy
                 if re.match(r'^\d{2}-\d{2}-\d{4}', line):
                     parts = line.split()

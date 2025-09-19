@@ -31,43 +31,34 @@ def parser_sbi_fun(filepath):
             lines = page.extract_text().split("\n")
             for line in lines:
                 # Match date at beginning
-                if re.match(r"\d{2}/\d{2}/\d{2}", line.strip().split()[0]):
+                if line.strip() and re.match(r"\d{2}/\d{2}/\d{2}", line.strip().split()[0]):
                     parts = line.split()
                     
                     # Date
                     txn_date = datetime.strptime(parts[0], "%d/%m/%y").strftime("%Y-%m-%d")
                     datetimes.append(txn_date)
                     
-                    # Description can span multiple words → capture till we hit numbers
-                    desc_parts = []
-                    i = 1
-                    while i < len(parts) and not re.match(r"[\d,.]+", parts[i]):
-                        desc_parts.append(parts[i])
-                        i += 1
-                    description = " ".join(desc_parts)
+                    # The last three columns are Debit, Credit, Balance
+                    balance = parts[-1]
+                    credit = parts[-2]
+                    debit = parts[-3]
+                    
+                    # The description is everything between the date and the debit amount
+                    description = " ".join(parts[1:-3])
                     descriptions.append(description)
-                    
-                    # Now amounts → Debit, Credit, Balance
-                    debit, credit, balance = None, None, None
-                    nums = [p.replace(",", "") for p in parts[i:]]
-                    
-                    if len(nums) >= 3:
-                        debit = nums[0] if nums[0] != "-" else None
-                        credit = nums[1] if nums[1] != "-" else None
-                        balance = nums[2]
 
                     # Assign values
-                    if debit:
-                        amounts.append(-float(debit))
+                    if debit != "-":
+                        amounts.append(-float(debit.replace(",", "")))
                         types.append("debit")
-                    elif credit:
-                        amounts.append(float(credit))
+                    elif credit != "-":
+                        amounts.append(float(credit.replace(",", "")))
                         types.append("credit")
                     else:
                         amounts.append(0)
                         types.append("unknown")
 
-                    balances.append(float(balance) if balance else None)
+                    balances.append(float(balance.replace(",", "")) if balance else None)
 
     # Build DataFrame
     output = pd.DataFrame({

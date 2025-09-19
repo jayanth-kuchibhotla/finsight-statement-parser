@@ -121,7 +121,7 @@ def process_message(record):
             s3_client.put_object(
             Bucket=S3_BUCKET_NAME,
             Key=parsed_key,
-            Body=json.dumps({"bank": bank, "status": status, "statement": statement_data, "transactions": transactions, "processed_at": datetime.utcnow().isoformat()}),
+            Body=json.dumps({"bank": bank, "status": status, "statement": statement_data, "transactions": transactions, "processed_at": datetime.datetime.now(datetime.UTC)}),
             )
             log_to_cloudwatch("INFO", f"Stored parsed result in S3 at {parsed_key}")
         except ClientError as e:

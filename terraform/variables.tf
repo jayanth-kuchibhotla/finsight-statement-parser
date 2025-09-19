@@ -30,19 +30,19 @@ variable "lambda_handler" {
 variable "lambda_zip_parser" {
   description = "The path to the deployment package for the parser Lambda function."
   type        = string
-  default     = "../build/parser.zip"
+  default     = "../Statement-Parser/parser.zip"
 }
 
 variable "lambda_zip_s3_trigger" {
   description = "The path to the deployment package for the S3 trigger Lambda function."
   type        = string
-  default     = "../build/s3_trigger.zip"
+  default     = "../S3-Trigger-Service/s3_trigger.zip"
 }
 
 variable "lambda_zip_presigned_url" {
   description = "The path to the deployment package for the presigned URL generation Lambda function."
   type        = string
-  default     = "../build/presigned_url.zip"
+  default     = "../Statement-Service-Presigned-URL-Generation/presigned_url.zip"
 }
 
 variable "environment" {

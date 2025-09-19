@@ -52,6 +52,7 @@ def parser_icici_fun(filepath):
         for page in pdf.pages:
             lines = page.extract_text().split('\n')
             for line in lines:
+                line = line.strip()
                 # Identify transaction rows based on S.No at the beginning of the line.
                 if re.match(r'^\d+', line):
                     parts = line.split()

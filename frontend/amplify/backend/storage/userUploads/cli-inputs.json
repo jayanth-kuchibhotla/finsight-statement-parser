@@ -1,0 +1,12 @@
+{
+  "resourceName": "userUploads",
+  "policyUUID": "be245a03",
+  "bucketName": "fintech-statement-parser-bucket",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE"
+  ],
+  "triggerFunction": "statementparser1bba6f2aCustomMessage",
+  "groupAccess": {}
+}

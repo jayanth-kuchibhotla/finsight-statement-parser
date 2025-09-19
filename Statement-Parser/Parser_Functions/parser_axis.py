@@ -52,6 +52,7 @@ def parser_axis_fun(filepath):
         for page in pdf.pages:
             lines = page.extract_text().split('\n')
             for line in lines:
+                line = line.strip()
                 # Identify transaction rows based on date format dd-mmm-yy
                 if re.match(r'^\d{2}-\w{3}-\d{2}', line):
                     parts = line.split()
