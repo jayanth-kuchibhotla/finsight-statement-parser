@@ -26,10 +26,16 @@ jobs:
           pip install boto3 pdfplumber pikepdf pandas botocore
 
       - name: Run S3 Trigger tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
         run: python -m unittest discover -s S3-Trigger-Service/Tests/Unit-Tests -p "*.py"
 
       - name: Run Presigned URL tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
         run: python -m unittest discover -s Statement-Service-Presigned-URL-Generation/Tests/Unit-Tests -p "*.py"
 
       - name: Run Statement Parser tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
         run: python -m unittest discover -s Statement-Parser/Tests/Unit-Tests -p "*.py"
