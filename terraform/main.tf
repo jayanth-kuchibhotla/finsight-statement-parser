@@ -21,7 +21,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "fintech-statement-parser-bucket"
+    bucket         = "finsight-statement-parser-bucket"
     key            = "terraform.tfstate"
     region         = "ap-south-1"
     encrypt        = true

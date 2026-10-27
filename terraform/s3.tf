@@ -31,3 +31,20 @@ resource "aws_s3_bucket_notification" "statement_parser_s3_trigger_notification"
 
   depends_on = [aws_lambda_permission.s3_trigger_permission]
 }
+
+resource "aws_s3_bucket_lifecycle_configuration" "statement_parser_data_lifecycle" {
+  bucket = aws_s3_bucket.statement_parser_data.id
+
+  rule {
+    id     = "expire-uploads"
+    status = "Enabled"
+
+    filter {
+      prefix = "uploads/"
+    }
+
+    expiration {
+      days = 1
+    }
+  }
+}
