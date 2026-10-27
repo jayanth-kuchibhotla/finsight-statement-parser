@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install boto3 pdfplumber pikepdf pandas botocore
+
+      - name: Run S3 Trigger tests
+        run: python -m unittest discover -s S3-Trigger-Service/Tests/Unit-Tests -p "*.py"
+
+      - name: Run Presigned URL tests
+        run: python -m unittest discover -s Statement-Service-Presigned-URL-Generation/Tests/Unit-Tests -p "*.py"
+
+      - name: Run Statement Parser tests
+        run: python -m unittest discover -s Statement-Parser/Tests/Unit-Tests -p "*.py"
