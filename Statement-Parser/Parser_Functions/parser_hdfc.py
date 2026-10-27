@@ -47,18 +47,22 @@ def parser_hdfc_fun(filepath):
         if branch_match:
             branch = branch_match.group(1).strip()
 
+        raw_text = ""
 
         # Extract transactions (all pages)
         for page in pdf.pages:
-            lines = page.extract_text().split('\n')
+            page_text = page.extract_text()
+            raw_text += page_text + "\n"
+            lines = page_text.split('\n')
+
             for line in lines:
                 line = line.strip()
                 # Identify transaction rows based on date format dd/mm/yy
-                if re.match(r'^\d{2}/\d{2}/\d{2}', line):
+                if re.match(r'^\d{2}/\d{2}/\d{4}', line):
                     parts = line.split()
                     
                     # Date
-                    txn_date = datetime.strptime(parts[0], "%d/%m/%y").strftime("%Y-%m-%d")
+                    txn_date = datetime.strptime(parts[0], "%d/%m/%Y").strftime("%Y-%m-%d")
                     
                     # Description
                     # The description is everything between the date and the reference number.
@@ -67,14 +71,6 @@ def parser_hdfc_fun(filepath):
                     # The withdrawal, deposit, and balance are the last three columns.
                     
                     # Find the index of the reference number
-                    ref_no_index = -1
-                    for i in range(1, len(parts)):
-                        if parts[i].isdigit() and len(parts[i]) > 5:
-                            ref_no_index = i
-                            break
-                    
-                    description = " ".join(parts[1:ref_no_index])
-                    
                     ref_no_index = -1
                     for i in range(1, len(parts)):
                         if parts[i].isdigit() and len(parts[i]) > 5:
@@ -151,4 +147,4 @@ def parser_hdfc_fun(filepath):
         for i in range(len(datetimes))
     ]
 
-    return ("without_timestamps", output_statement, output_transactions)
+    return ("without_timestamps", output_statement, output_transactions, raw_text)
