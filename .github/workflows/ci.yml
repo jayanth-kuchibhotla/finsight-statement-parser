@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - gh-workflow-test
   pull_request:
     branches:
       - main
