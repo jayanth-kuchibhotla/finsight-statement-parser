@@ -41,7 +41,7 @@ class TestDecryptPdf(unittest.TestCase):
 
         self.assertEqual(result_state, "encrypted")
         self.assertTrue(result_verdict)
-        self.assertEqual(result_password, "01012000")
+        self.assertEqual(result_password, "JOHN0101")
         mock_pdf.save.assert_called_once_with('decrypted.pdf')
 
     @patch('pikepdf.open', side_effect=pikepdf.PasswordError("wrong password"))
