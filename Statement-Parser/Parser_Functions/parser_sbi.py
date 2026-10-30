@@ -11,7 +11,7 @@ def parser_sbi_fun(filepath):
         
         # Extract statement-level info (from first page)
         first_page = pdf.pages[0].extract_text().split("\n")
-        account_number, branch, customer_name, period = None, None, None, None
+        account_number, branch, customer_name, date_start, date_end = None, None, None, None, None
 
         for line in first_page:
             if "Account No" in line:
@@ -26,9 +26,14 @@ def parser_sbi_fun(filepath):
                 date_start = datetime.strptime(start, "%d/%m/%Y").strftime("%Y-%m-%d")
                 date_end = datetime.strptime(end, "%d/%m/%Y").strftime("%Y-%m-%d")
 
+        raw_text = ""
+
         # Extract transactions (all pages)
         for page in pdf.pages:
-            lines = page.extract_text().split("\n")
+            page_text = page.extract_text()
+            raw_text += page_text + "\n"
+            lines = page_text.split("\n")
+
             for line in lines:
                 # Match date at beginning
                 if line.strip() and re.match(r"\d{2}/\d{2}/\d{2}", line.strip().split()[0]):
@@ -93,4 +98,4 @@ def parser_sbi_fun(filepath):
         for i in range(len(datetimes))
     ]
 
-    return ("without_timestamps", output_statement, output_transactions)
+    return ("without_timestamps", output_statement, output_transactions, raw_text)

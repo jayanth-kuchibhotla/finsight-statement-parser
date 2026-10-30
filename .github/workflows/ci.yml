@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install boto3 pdfplumber pikepdf pandas botocore
+
+      - name: Run S3 Trigger tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/S3-Trigger-Service
+        run: python S3-Trigger-Service/Tests/Unit-Tests/test_s3_trigger_lambda.py
+
+      - name: Run Presigned URL tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Service-Presigned-URL-Generation
+        run: python Statement-Service-Presigned-URL-Generation/Tests/Unit-Tests/test_presigned_url_lambda.py
+
+      - name: Run Statement Parser Lambda tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Parser
+        run: python Statement-Parser/Tests/Unit-Tests/test_lambda_function.py
+
+      - name: Run Bank Identifier tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Parser
+        run: python Statement-Parser/Tests/Unit-Tests/test_bank_identifier.py
+
+      - name: Run Decrypt PDF tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Parser
+        run: python Statement-Parser/Tests/Unit-Tests/test_decrypt_pdf.py
+
+      - name: Run HDFC Parser tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Parser
+        run: python Statement-Parser/Tests/Unit-Tests/test_parser_hdfc.py
+
+      - name: Run SBI Parser tests
+        env:
+          AWS_DEFAULT_REGION: ap-south-1
+          PYTHONPATH: ${{ github.workspace }}/Statement-Parser
+        run: python Statement-Parser/Tests/Unit-Tests/test_parser_sbi.py

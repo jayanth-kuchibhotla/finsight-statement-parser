@@ -12,7 +12,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "A unique name for the project to prefix resources."
   type        = string
-  default     = "statement-parser"
+  default     = "finsight-statement-parser"
 }
 
 variable "lambda_runtime" {
@@ -45,6 +45,18 @@ variable "lambda_zip_presigned_url" {
   default     = "../Statement-Service-Presigned-URL-Generation/presigned_url.zip"
 }
 
+variable "lambda_zip_bedrock_parser" {
+  description = "The path to the deployment package for the Bedrock parser Lambda function."
+  type        = string
+  default     = "../Bedrock-Parser/bedrock_parser.zip"
+}
+
+variable "lambda_zip_results_api" {
+  description = "The path to the deployment package for the results API Lambda function."
+  type        = string
+  default     = "../Results-API/results_api.zip"
+}
+
 variable "environment" {
   description = "The deployment environment (e.g., dev, staging, prod)."
   type        = string
@@ -55,4 +67,10 @@ variable "api_allowed_origins" {
   description = "A list of allowed origins for the API Gateway CORS configuration."
   type        = list(string)
   default     = ["http://localhost:3000"]
+}
+
+variable "billing_alert_email" {
+  description = "Email address to receive billing alerts."
+  type        = string
+  default     = "jayanth.kuchibhotla@gmail.com"
 }

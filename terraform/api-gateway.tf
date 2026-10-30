@@ -14,19 +14,22 @@ resource "aws_apigatewayv2_integration" "statement_parser_presigned_url_integrat
   integration_uri  = aws_lambda_function.presigned_url_generation.invoke_arn
 }
 
+resource "aws_apigatewayv2_integration" "results_api_integration" {
+  api_id           = aws_apigatewayv2_api.statement_parser_api_gateway.id
+  integration_type = "AWS_PROXY"
+  integration_uri  = aws_lambda_function.results_api.invoke_arn
+}
+
 resource "aws_apigatewayv2_route" "statement_parser_presigned_url_route" {
   api_id    = aws_apigatewayv2_api.statement_parser_api_gateway.id
   route_key = "POST /generate-presigned-url"
   target    = "integrations/${aws_apigatewayv2_integration.statement_parser_presigned_url_integration.id}"
 }
 
-resource "aws_lambda_permission" "api_gateway_permission" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.presigned_url_generation.function_name
-  principal     = "apigateway.amazonaws.com"
-
-  source_arn = "${aws_apigatewayv2_api.statement_parser_api_gateway.execution_arn}/*/*"
+resource "aws_apigatewayv2_route" "results_api_route" {
+  api_id    = aws_apigatewayv2_api.statement_parser_api_gateway.id
+  route_key = "GET /results/{statement_id}"
+  target    = "integrations/${aws_apigatewayv2_integration.results_api_integration.id}"
 }
 
 resource "aws_cloudwatch_log_group" "api_gateway_logs" {
@@ -55,13 +58,4 @@ resource "aws_apigatewayv2_stage" "statement_parser_default_stage" {
       "status"             = "$context.status"
     })
   }
-}
-
-output "api_endpoint" {
-  value = aws_apigatewayv2_api.statement_parser_api_gateway.api_endpoint
-}
-
-resource "local_file" "env_file" {
-  content  = "REACT_APP_API_GATEWAY_ENDPOINT=${aws_apigatewayv2_api.statement_parser_api_gateway.api_endpoint}"
-  filename = "../frontend/.env"
 }

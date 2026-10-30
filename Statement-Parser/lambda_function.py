@@ -3,8 +3,9 @@ import logging
 import os
 import boto3
 import tempfile
+import pikepdf
 from botocore.exceptions import ClientError
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Import parser functions
 from Parser_Functions.parser_sbi import parser_sbi_fun
@@ -14,7 +15,6 @@ from Parser_Functions.parser_axis import parser_axis_fun
 from Parser_Functions.parser_kotak import parser_kotak_fun
 
 # Import other utilities
-from decrypt_pdf import try_bank_passwords
 from bank_identifier import identify_bank
 from log_to_cloudwatch import log_to_cloudwatch
 
@@ -24,9 +24,11 @@ logger.setLevel(logging.INFO)
 
 # Initialize Boto3 clients
 s3_client = boto3.client("s3")
+sqs_client = boto3.client("sqs")
 
 # Get environment variables
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "")
+BEDROCK_QUEUE_URL = os.environ.get("BEDROCK_QUEUE_URL", "")
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
 class StatementProcessingError(Exception):
@@ -65,24 +67,7 @@ def process_message(record):
                 raise StatementProcessingError(f"S3 object not found: {s3_key}")
             raise StatementProcessingError("Failed to download from S3")
 
-        # Step 3: Decrypt PDF if password is provided
-        if password:
-            try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-                    decrypted_pdf_path = temp_file.name
-                
-                if not try_bank_passwords(local_pdf_path, password, decrypted_pdf_path):
-                    raise StatementProcessingError("Decryption returned False. Check password or file integrity.")
-                
-                # Replace original path with decrypted path for subsequent steps
-                os.remove(local_pdf_path)
-                local_pdf_path = decrypted_pdf_path
-                log_to_cloudwatch("INFO", f"PDF decrypted successfully for {s3_key}.")
-            except Exception as e:
-                log_to_cloudwatch("ERROR", f"Decryption failed for {s3_key}: {e}")
-                raise StatementProcessingError("Decryption failed")
-
-        # Step 4: Identify bank
+        # Step 3: Identify bank
         try:
             bank = identify_bank(local_pdf_path)
             if bank == "unknown":
@@ -91,9 +76,29 @@ def process_message(record):
         except Exception as e:
             log_to_cloudwatch("ERROR", f"Bank identification failed for {s3_key}: {e}")
             raise StatementProcessingError("Bank identification failed")
+        
+        # Step 4: Decrypt PDF with user-provided password
+        if password:
+            try:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+                    decrypted_pdf_path = temp_file.name
+                
+                pdf = pikepdf.open(local_pdf_path, password=password)
+                pdf.save(decrypted_pdf_path)
+                pdf.close()
+                
+                os.remove(local_pdf_path)
+                local_pdf_path = decrypted_pdf_path
+                log_to_cloudwatch("INFO", f"PDF decrypted successfully for {s3_key}.")
+            except pikepdf.PasswordError:
+                log_to_cloudwatch("ERROR", f"Incorrect password for {s3_key}")
+                raise StatementProcessingError("Incorrect password provided")
+            except Exception as e:
+                log_to_cloudwatch("ERROR", f"Decryption failed for {s3_key}: {e}")
+                raise StatementProcessingError("Decryption failed")
 
         # Step 5: Parse statement
-        statement_data, transactions = {}, []
+        statement_data, transactions, extracted_text = {}, [], ""
         parsers = {
             "sbi": parser_sbi_fun, "hdfc": parser_hdfc_fun, "icici": parser_icici_fun,
             "axis": parser_axis_fun, "kotak": parser_kotak_fun,
@@ -101,32 +106,38 @@ def process_message(record):
         parser_function = parsers.get(bank)
         if parser_function:
             try:
-                _, statement_data, transactions = parser_function(local_pdf_path)
+                _, statement_data, transactions, extracted_text = parser_function(local_pdf_path)
                 log_to_cloudwatch("INFO", f"Parsed statement for {s3_key}, account: {statement_data.get('account_number')}")
                 status = "PROCESSED"
             except Exception as e:
                 log_to_cloudwatch("ERROR", f"Parser failed for {bank} on {s3_key}: {e}")
                 statement_data = {"error": str(e)}
                 transactions = []
+                extracted_text = ""
                 status = "FAILED"
         else:
             log_to_cloudwatch("WARNING", f"No parser available for bank: {bank}")
             statement_data = {"error": f"No parser available for {bank}"}
             transactions = []
+            extracted_text = ""
             status = "FAILED"
 
-        # Step 6: Store parsed data in S3
+        # Step 6: Send extracted text to Bedrock queue
         try:
-            parsed_key = s3_key.replace("uploads/", "parsed/").replace(".pdf", ".json")
-            s3_client.put_object(
-            Bucket=S3_BUCKET_NAME,
-            Key=parsed_key,
-            Body=json.dumps({"bank": bank, "status": status, "statement": statement_data, "transactions": transactions, "processed_at": datetime.datetime.now(datetime.UTC)}),
+            sqs_client.send_message(
+                QueueUrl=BEDROCK_QUEUE_URL,
+                MessageBody=json.dumps({
+                    "bank": bank,
+                    "s3_key": s3_key,
+                    "statement_data": statement_data,
+                    "extracted_text": extracted_text,
+                    "processed_at": datetime.now(timezone.utc).isoformat()
+                })
             )
-            log_to_cloudwatch("INFO", f"Stored parsed result in S3 at {parsed_key}")
+            log_to_cloudwatch("INFO", f"Sent parsed result to SQS for {s3_key}")
         except ClientError as e:
-            log_to_cloudwatch("ERROR", f"Failed to store parsed data in S3 for {parsed_key}: {e}")
-            raise StatementProcessingError("Failed to store data in S3")
+            log_to_cloudwatch("ERROR", f"Failed to send parsed data to SQS for {s3_key}: {e}")
+            raise StatementProcessingError("Failed to send parsed data to SQS")
 
     finally:
         # Clean up temporary files
