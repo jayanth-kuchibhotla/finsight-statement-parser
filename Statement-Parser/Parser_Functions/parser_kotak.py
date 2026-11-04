@@ -1,5 +1,4 @@
 import pdfplumber
-import pandas as pd
 from datetime import datetime
 import re
 
@@ -84,16 +83,6 @@ def parser_kotak_fun(filepath):
                     amounts.append(amount)
                     balances.append(float(balance_str.replace(',', '')))
                     types.append(txn_type)
-
-
-    # Build DataFrame (optional, but can be useful for data manipulation)
-    output = pd.DataFrame({
-        "Transaction Date": datetimes,
-        "Description": descriptions,
-        "Amount": amounts,
-        "Balance": balances,
-        "Transaction Type": types
-    })
 
     # Statement summary
     output_statement = {
