@@ -13,7 +13,7 @@ resource "aws_s3_bucket_cors_configuration" "statement_parser_data_cors" {
   bucket = aws_s3_bucket.statement_parser_data.id
   cors_rule {
     allowed_headers = ["*"]
-    allowed_methods = ["PUT", "POST", "OPTIONS"]
+    allowed_methods = ["PUT", "POST"]
     allowed_origins = ["*"] # TODO: restrict to Vercel domain in production
     expose_headers  = ["ETag"]
     max_age_seconds = 3000

@@ -1,5 +1,4 @@
 import pdfplumber
-import pandas as pd
 from datetime import datetime
 import re
 
@@ -64,15 +63,6 @@ def parser_sbi_fun(filepath):
                         types.append("unknown")
 
                     balances.append(float(balance.replace(",", "")) if balance else None)
-
-    # Build DataFrame
-    output = pd.DataFrame({
-        "Transaction Date": datetimes,
-        "Description": descriptions,
-        "Amount": amounts,
-        "Balance": balances,
-        "Transaction Type": types
-    })
 
     # Statement summary
     output_statement = {
