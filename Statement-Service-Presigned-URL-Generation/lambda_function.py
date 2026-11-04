@@ -2,7 +2,7 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 
-whitelisted_buckets = ["finsight-statement-parser-bucket"]
+whitelisted_buckets = ["finsight-statement-parser-statement-data"]
 
 def build_response(status_code, body):
     return {
