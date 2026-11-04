@@ -15,7 +15,7 @@ class TestPresignedUrlLambda(unittest.TestCase):
         # Mock API Gateway event
         event = {
             "queryStringParameters": {
-                "bucket": "finsight-statement-parser-bucket",
+                "bucket": "finsight-statement-parser-statement-data",
                 "filepath": "uploads/test.pdf"
             }
         }
@@ -48,7 +48,7 @@ class TestPresignedUrlLambda(unittest.TestCase):
         # Mock API Gateway event
         event = {
             "queryStringParameters": {
-                "bucket": "finsight-statement-parser-bucket"
+                "bucket": "finsight-statement-parser-statement-data"
             }
         }
 
