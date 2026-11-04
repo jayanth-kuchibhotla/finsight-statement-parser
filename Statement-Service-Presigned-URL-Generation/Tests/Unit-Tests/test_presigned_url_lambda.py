@@ -3,10 +3,6 @@ import os
 from unittest.mock import MagicMock, patch
 import unittest
 
-# Mock the ewalambdacore module before importing the lambda_function
-sys.modules['ewalambdacore'] = MagicMock()
-sys.modules['ewalambdacore.httpwrapper'] = MagicMock()
-
 # Add the parent directory to the system path to allow for import
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -19,7 +15,7 @@ class TestPresignedUrlLambda(unittest.TestCase):
         # Mock API Gateway event
         event = {
             "queryStringParameters": {
-                "bucket": "fintech-statement-parser-bucket",
+                "bucket": "finsight-statement-parser-bucket",
                 "filepath": "uploads/test.pdf"
             }
         }
@@ -33,7 +29,7 @@ class TestPresignedUrlLambda(unittest.TestCase):
         result = lambda_handler(event, {})
 
         # Assertions
-        self.assertEqual(result, {"url": "http://example.com", "fields": {}})
+        self.assertEqual(result['statusCode'], 200)
         mock_s3.generate_presigned_post.assert_called_once()
 
     def test_lambda_handler_missing_bucket(self):
@@ -45,18 +41,20 @@ class TestPresignedUrlLambda(unittest.TestCase):
         }
 
         # Call the handler
-        lambda_handler(event, {})
+        result = lambda_handler(event, {})
+        self.assertEqual(result['statusCode'], 400)
 
     def test_lambda_handler_missing_filepath(self):
         # Mock API Gateway event
         event = {
             "queryStringParameters": {
-                "bucket": "fintech-statement-parser-bucket"
+                "bucket": "finsight-statement-parser-bucket"
             }
         }
 
         # Call the handler
-        lambda_handler(event, {})
+        result = lambda_handler(event, {})
+        self.assertEqual(result['statusCode'], 400)
 
     def test_lambda_handler_invalid_bucket(self):
         # Mock API Gateway event
@@ -68,7 +66,8 @@ class TestPresignedUrlLambda(unittest.TestCase):
         }
 
         # Call the handler
-        lambda_handler(event, {})
+        result = lambda_handler(event, {})
+        self.assertEqual(result['statusCode'], 400)
 
 if __name__ == '__main__':
     unittest.main()

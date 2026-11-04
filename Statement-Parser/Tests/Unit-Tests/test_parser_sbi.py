@@ -30,7 +30,7 @@ class TestParserSbi(unittest.TestCase):
         mock_pdfplumber_open.return_value.__enter__.return_value = mock_pdf
 
         # Call the function
-        status, statement_info, transactions = parser_sbi_fun('dummy.pdf')
+        status, statement_info, transactions, raw_text = parser_sbi_fun('dummy.pdf')
 
         # Assertions
         self.assertEqual(status, "without_timestamps")

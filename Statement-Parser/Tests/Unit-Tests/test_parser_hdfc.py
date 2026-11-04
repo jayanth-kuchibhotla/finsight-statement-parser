@@ -23,14 +23,14 @@ class TestParserHdfc(unittest.TestCase):
             Statement From : 01/02/2023 To 28/02/2023
             Branch : DELHI
             Date Narration Ref No. Value Dt Withdrawal Amt. Deposit Amt. Balance
-            03/02/23 SALARY 12345 03/02/23 0.00 60,000.00 60,000.00
-            06/02/23 GROCERIES 54321 06/02/23 5,000.00 0.00 55,000.00
+            03/02/2023 SALARY 123456 03/02/23 0.00 60,000.00 60,000.00
+            06/02/2023 GROCERIES 654321 06/02/23 5,000.00 0.00 55,000.00
         """
         mock_pdf.pages = [mock_page1]
         mock_pdfplumber_open.return_value.__enter__.return_value = mock_pdf
 
         # Call the function
-        status, statement_info, transactions = parser_hdfc_fun('dummy.pdf')
+        status, statement_info, transactions, raw_text = parser_hdfc_fun('dummy.pdf')
 
         # Assertions
         self.assertEqual(status, "without_timestamps")

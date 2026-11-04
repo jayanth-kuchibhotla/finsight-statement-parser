@@ -4,32 +4,28 @@ from datetime import datetime
 # Bank-specific password rules
 BANK_PASSWORD_PATTERNS = {
     "hdfc": [
-        lambda dob, acc, cust, pan, mob: dob.strftime("%d%m%Y") if dob else None,
-        lambda dob, acc, cust, pan, mob: cust,
+        lambda dob, acc, cust, pan, mob, fullname: cust if cust else None,
+        lambda dob, acc, cust, pan, mob, fullname: (fullname.split()[0][:4] + dob.strftime("%d%m")).upper() if dob and fullname else None,
     ],
     "sbi": [
-        lambda dob, acc, cust, pan, mob: dob.strftime("%d%m%Y") if dob else None,
-        lambda dob, acc, cust, pan, mob: acc[-5:] if acc else None,  # last 5 digits
+        lambda dob, acc, cust, pan, mob, fullname: acc if acc else None,
+        lambda dob, acc, cust, pan, mob, fullname: (fullname.split()[0][:5] + dob.strftime("%d%m%Y")).upper() if dob and fullname else None,
     ],
     "icici": [
-        lambda dob, acc, cust, pan, mob: acc,
-        lambda dob, acc, cust, pan, mob: dob.strftime("%d%m%Y") if dob else None,
+        lambda dob, acc, cust, pan, mob, fullname: acc if acc else None,
+        lambda dob, acc, cust, pan, mob, fullname: dob.strftime("%d%m%Y") if dob else None,
     ],
     "axis": [
-        lambda dob, acc, cust, pan, mob: cust,
-        lambda dob, acc, cust, pan, mob: dob.strftime("%d%m%Y") if dob else None,
+        lambda dob, acc, cust, pan, mob, fullname: cust if cust else None,
+        lambda dob, acc, cust, pan, mob, fullname: dob.strftime("%d%m%Y") if dob else None,
     ],
     "kotak": [
-        lambda dob, acc, cust, pan, mob: dob.strftime("%d%m%Y") if dob else None,
-        lambda dob, acc, cust, pan, mob: acc[-6:] if acc else None,  # last 6 digits
-    ],
-    "hdfc_cc": [  # HDFC Credit Card statements
-        lambda dob, acc, cust, pan, mob: pan,
-        lambda dob, acc, cust, pan, mob: mob[-4:] if mob else None,
+        lambda dob, acc, cust, pan, mob, fullname: dob.strftime("%d%m%Y") if dob else None,
+        lambda dob, acc, cust, pan, mob, fullname: acc[-6:] if acc else None,
     ],
 }
 
-def try_bank_passwords(filepath, decrypted_filepath, bank, dob=None, acc=None, cust=None, pan=None, mob=None):
+def try_bank_passwords(filepath, decrypted_filepath, bank, dob=None, acc=None, cust=None, pan=None, mob=None, fullname=None):
     """
     Try to decrypt a bank statement PDF using known password patterns.
     """
@@ -48,7 +44,7 @@ def try_bank_passwords(filepath, decrypted_filepath, bank, dob=None, acc=None, c
     # 2. Try each password pattern for that bank
     for gen_pwd in BANK_PASSWORD_PATTERNS.get(bank.lower(), []):
         try:
-            password = gen_pwd(dob, acc, cust, pan, mob)
+            password = gen_pwd(dob, acc, cust, pan, mob, fullname)
             if password:
                 pdf = pikepdf.open(filepath, password=str(password))
                 pdf.save(decrypted_filepath)

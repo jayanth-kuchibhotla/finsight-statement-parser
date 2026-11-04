@@ -1,10 +1,15 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
-import ewalambdacore.httpwrapper as httpwrapper
 
-whitelisted_buckets = ["fintech-statement-parser-bucket"]
+whitelisted_buckets = ["finsight-statement-parser-bucket"]
 
+def build_response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps(body)
+    }
 
 def lambda_handler(event, context):
     print(event)
@@ -12,18 +17,16 @@ def lambda_handler(event, context):
     params = event.get("queryStringParameters", {})
 
     if "bucket" not in params:
-        return httpwrapper.response.bad_request({"message": "bucket name is missing"})
+        return build_response(400, {"message": "bucket name is missing"})
 
     if "filepath" not in params:
-        return httpwrapper.response.bad_request({"message": "filepath is missing"})
+        return build_response(400, {"message": "filepath is missing"})
 
     bucket_name = params["bucket"]
     filepath = params["filepath"]
 
     if bucket_name not in whitelisted_buckets:
-        return httpwrapper.response.bad_request(
-            {"message": "operation not allowed for bucket {0}".format(bucket_name)}
-        )
+        return build_response(400, {"message": "operation not allowed for bucket {0}".format(bucket_name)})
 
     s3_client = boto3.client("s3")
 
@@ -43,4 +46,4 @@ def lambda_handler(event, context):
         print(type(exc))
         return None
 
-    return response
+    return build_response(200, response)
