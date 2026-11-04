@@ -1,10 +1,11 @@
 resource "aws_lambda_function" "parser" {
-  function_name = "${var.project_name}"
-  filename      = var.lambda_zip_parser
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  role          = aws_iam_role.parser_lambda_role.arn
-  timeout       = 900
+  function_name    = "${var.project_name}"
+  filename         = var.lambda_zip_parser
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.parser_lambda_role.arn
+  timeout          = 900
+  source_code_hash = filebase64sha256(var.lambda_zip_parser)
 
   environment {
     variables = {
@@ -25,12 +26,13 @@ resource "aws_lambda_event_source_mapping" "parser_sqs_mapping" {
 }
 
 resource "aws_lambda_function" "s3_trigger" {
-  function_name = "${var.project_name}-s3-trigger"
-  filename      = var.lambda_zip_s3_trigger
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  role          = aws_iam_role.s3_trigger_lambda_role.arn
-  timeout       = 60
+  function_name    = "${var.project_name}-s3-trigger"
+  filename         = var.lambda_zip_s3_trigger
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.s3_trigger_lambda_role.arn
+  timeout          = 60
+  source_code_hash = filebase64sha256(var.lambda_zip_s3_trigger)
 
   environment {
     variables = {
@@ -51,12 +53,13 @@ resource "aws_lambda_permission" "s3_trigger_permission" {
 }
 
 resource "aws_lambda_function" "presigned_url_generation" {
-  function_name = "${var.project_name}-presigned-url-generation"
-  filename      = var.lambda_zip_presigned_url
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  role          = aws_iam_role.presigned_url_lambda_role.arn
-  timeout       = 60
+  function_name    = "${var.project_name}-presigned-url-generation"
+  filename         = var.lambda_zip_presigned_url
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.presigned_url_lambda_role.arn
+  timeout          = 60
+  source_code_hash = filebase64sha256(var.lambda_zip_presigned_url)
 
   environment {
     variables = {
@@ -69,12 +72,13 @@ resource "aws_lambda_function" "presigned_url_generation" {
 }
 
 resource "aws_lambda_function" "bedrock_parser" {
-  function_name = "${var.project_name}-bedrock-parser"
-  filename      = var.lambda_zip_bedrock_parser
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  role          = aws_iam_role.bedrock_lambda_role.arn
-  timeout       = 900
+  function_name    = "${var.project_name}-bedrock-parser"
+  filename         = var.lambda_zip_bedrock_parser
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.bedrock_lambda_role.arn
+  timeout          = 900
+  source_code_hash = filebase64sha256(var.lambda_zip_bedrock_parser)
 
   environment {
     variables = {
@@ -95,12 +99,13 @@ resource "aws_lambda_event_source_mapping" "bedrock_sqs_mapping" {
 }
 
 resource "aws_lambda_function" "results_api" {
-  function_name = "${var.project_name}-results-api"
-  filename      = var.lambda_zip_results_api
-  handler       = var.lambda_handler
-  runtime       = var.lambda_runtime
-  role          = aws_iam_role.results_api_lambda_role.arn
-  timeout       = 60
+  function_name    = "${var.project_name}-results-api"
+  filename         = var.lambda_zip_results_api
+  handler          = var.lambda_handler
+  runtime          = var.lambda_runtime
+  role             = aws_iam_role.results_api_lambda_role.arn
+  timeout          = 60
+  source_code_hash = filebase64sha256(var.lambda_zip_results_api)
 
   environment {
     variables = {
